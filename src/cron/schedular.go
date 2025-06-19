@@ -34,6 +34,11 @@ func (s *Scheduler) Start() {
 		log.Fatalf("[%s]Failed to add cron job: %v", time.Now().Format(time.RFC3339), err)
 	}
 
+	_, err = s.cron.AddFunc("*/5 * * * * *", s.generateHealthReport)
+	if err != nil {
+		log.Fatalf("[%s] Failed to add health check cron job: %v", time.Now().Format(time.RFC3339), err)
+	}
+
 	s.cron.Start()
 	log.Println("[%s] Cron Scheduler Started - will generate reports every 10 seconds", time.Now().Format(time.RFC3339))
 
@@ -74,4 +79,23 @@ func (s *Scheduler) generateReportsJob() {
 	// reportCount := s.reportServer.GetReportCount()
 	// log.Printf("[%s] Cron Job Completed - Total Report In Memory : %d", time.Now().Format(time.RFC3339), reportCount)
 
+}
+
+func (s *Scheduler) generateHealthReport() {
+	log.Printf("[%s] Generating Health Report", time.Now().Format(time.RFC3339))
+
+	// Function should be running till this time
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	req := &pb.HealthCheckRequest{}
+	defer cancel()
+
+	healthCheckResponse, err := s.client.HealthCheck(ctx, req)
+
+	if err != nil {
+		log.Printf("[%s] Cron Job Execution Errored", time.Now().Format(time.RFC3339))
+		return
+	}
+
+	log.Printf("[%s] Cron Job for Health Check Generated Report [%s]", time.Now().Format(time.RFC3339), healthCheckResponse.Status)
 }
