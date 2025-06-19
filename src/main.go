@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	log.Println("[%s] gRPC server starting on port 50051...", time.Now().Format(time.RFC3339))
+	log.Printf("[%s] gRPC server starting on port 50051...", time.Now().Format(time.RFC3339))
 
 	//Go routine for grpc
 	go func() {
@@ -61,7 +61,7 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c // Block until a signal is received
 
-	log.Println("[%s] Shutting down server...", time.Now().Format(time.RFC3339))
+	log.Panicf("[%s] Shutting down server...", time.Now().Format(time.RFC3339))
 	grpcServer.GracefulStop()
-	log.Println("[%s] Server stopped.", time.Now().Format(time.RFC3339))
+	log.Panicf("[%s] Server stopped.", time.Now().Format(time.RFC3339))
 }

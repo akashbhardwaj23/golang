@@ -25,7 +25,7 @@ func NewScheduler(client pb.ReportServiceClient) *Scheduler {
 }
 
 func (s *Scheduler) Start() {
-	log.Println("[%s] Starting cron Scheduler", time.Now().Format(time.RFC3339))
+	log.Printf("[%s] Starting cron Scheduler", time.Now().Format(time.RFC3339))
 
 	// Runs every 10 seconds and generate a Report
 	_, err := s.cron.AddFunc("*/10 * * * * *", s.generateReportsJob)
@@ -40,7 +40,7 @@ func (s *Scheduler) Start() {
 	}
 
 	s.cron.Start()
-	log.Println("[%s] Cron Scheduler Started - will generate reports every 10 seconds", time.Now().Format(time.RFC3339))
+	log.Printf("[%s] Cron Scheduler Started - will generate reports every 10 seconds", time.Now().Format(time.RFC3339))
 
 }
 
