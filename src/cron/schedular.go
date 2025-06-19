@@ -2,45 +2,47 @@ package cron
 
 import (
 	"context"
-	"goassignment/src/server"
 	"log"
 	"time"
+
+	pb "goassignment/proto"
 
 	"github.com/robfig/cron/v3"
 )
 
 type Scheduler struct {
 	cron            *cron.Cron
-	reportServer    *server.ReportServer
+	client          pb.ReportServiceClient
 	predefinedUsers []string
 }
 
-func NewScheduler(reportServer *server.ReportServer) *Scheduler {
+func NewScheduler(client pb.ReportServiceClient) *Scheduler {
 	return &Scheduler{
 		cron:            cron.New(cron.WithSeconds()),
-		reportServer:    reportServer,
+		client:          client,
 		predefinedUsers: []string{"user1", "user2", "user3", "user4", "user5"},
 	}
 }
 
 func (s *Scheduler) Start() {
-	log.Println("Starting cron Scheduler")
+	log.Println("[%s] Starting cron Scheduler", time.Now().Format(time.RFC3339))
 
+	// Runs every 10 seconds and generate a Report
 	_, err := s.cron.AddFunc("*/10 * * * * *", s.generateReportsJob)
 
 	if err != nil {
-		log.Fatalf("Failed to add cron job: %v", err)
+		log.Fatalf("[%s]Failed to add cron job: %v", time.Now().Format(time.RFC3339), err)
 	}
 
 	s.cron.Start()
-	log.Println("Cron Scheduler Started - will generate reports every 10 seconds")
+	log.Println("[%s] Cron Scheduler Started - will generate reports every 10 seconds", time.Now().Format(time.RFC3339))
 
 }
 
 func (s *Scheduler) Stop() {
-	log.Printf("Stopping Cron Scheduler")
+	log.Printf("[%s] Stopping Cron Scheduler", time.Now().Format(time.RFC3339))
 	s.cron.Stop()
-	log.Printf("Cron Scheduler Stopped")
+	log.Printf("[%s] Cron Scheduler Stopped", time.Now().Format(time.RFC3339))
 }
 
 func (s *Scheduler) generateReportsJob() {
@@ -50,11 +52,12 @@ func (s *Scheduler) generateReportsJob() {
 	defer cancel()
 
 	for _, userId := range s.predefinedUsers {
-		req := &server.GeneratedReportRequest{
+		req := &pb.GenerateReportRequest{
 			UserId: userId,
 		}
 
-		resp, err := s.reportServer.GenerateReport(ctx, req)
+		// Made a gRpc call using the client
+		resp, err := s.client.GenerateReport(ctx, req)
 		if err != nil {
 			log.Printf("[%s] Error Generating Reports For Users %s: %v", time.Now().Format(time.RFC3339), userId, err)
 			continue
@@ -68,7 +71,7 @@ func (s *Scheduler) generateReportsJob() {
 		log.Printf("[%s] Cron Job - Reports Generated for User %s : %s", time.Now().Format(time.RFC3339), userId, resp.Error)
 	}
 
-	reportCount := s.reportServer.GetReportCount()
-	log.Printf("[%s] Cron Job Completed - Total Report In Memory : %d", time.Now().Format(time.RFC3339), reportCount)
+	// reportCount := s.reportServer.GetReportCount()
+	// log.Printf("[%s] Cron Job Completed - Total Report In Memory : %d", time.Now().Format(time.RFC3339), reportCount)
 
 }

@@ -1,0 +1,32 @@
+
+// Start proto file
+syntax = "proto3";
+
+package report;
+
+option go_package = "./proto";
+
+
+service ReportService {
+    rpc GenerateReport(GenerateReportRequest) returns (GeneratedReportResponse);
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+message GenerateReportRequest {
+    string userId = 1;
+}
+
+message GeneratedReportResponse {
+    string report_id = 1;
+    string error = 2;
+}
+
+
+message HealthCheckRequest {}
+
+
+
+
+message HealthCheckResponse {
+    string status = 1;
+}
